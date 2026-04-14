@@ -9,24 +9,24 @@ os.makedirs("results", exist_ok=True)
 
 
 #  SIMULATE EVACUATION 
-def run_sim(n, speed, panic, blocked):
+def run_sim(n, speed, panic, blocked):#n: number of people in the stadium
     
-    rng = np.random.default_rng(42)
-    cx, cy = 350, 290
+    rng = np.random.default_rng(42)#ensuring exact same random numbers evry run
+    cx, cy = 350, 290 #coordinates for center of the stadium
 
     # place people in oval stands
-    r   = 0.45 + rng.random(n) * 0.48
-    ang = rng.random(n) * 2 * np.pi
+    r   = 0.45 + rng.random(n) * 0.48 #random distance for each person
+    ang = rng.random(n) * 2 * np.pi# random angle for each person
     x   = cx + r * 240 * np.cos(ang) + rng.normal(0, 8, n)
     y   = cy + r * 185 * np.sin(ang) + rng.normal(0, 8, n)
 
-    # exit positions
+    # putting the exit positions
     e_ang  = np.radians([90,45,0,315,270,225,180,135])
     ex     = cx + 280 * np.cos(e_ang)
-    ey     = cy - 220 * np.sin(e_ang)
-    open_e = [i for i in range(8) if i not in blocked]
+    ey     = cy - 220 * np.sin(e_ang) 
+    open_e = [i for i in range(8) if i not in blocked] #list of exit indexes that are open
 
-    # assign each person their nearest open exit
+    # assign each person to the nearest open exit
     target = np.zeros(n, dtype=int)
     for i in range(n):
         dists     = [np.hypot(ex[j]-x[i], ey[j]-y[i]) for j in open_e]
@@ -35,11 +35,11 @@ def run_sim(n, speed, panic, blocked):
     gx   = ex[target]
     gy   = ey[target]
     spds = (0.9 + rng.random(n) * 0.8) * speed * 0.02
-    out  = np.zeros(n, dtype=bool)
+    out  = np.zeros(n, dtype=bool) #True or False array for if the person has evacuted
 
-    rows        = []
+    rows        = [] #store time and count of those evacuated
     FPS_SIM     = 60
-    max_q       = np.zeros(8, dtype=int)
+    max_q       = np.zeros(8, dtype=int) #maximim queue at each of the gates
     wait_sum    = np.zeros(8)
     wait_cnt    = np.zeros(8, dtype=int)
 
@@ -49,7 +49,7 @@ def run_sim(n, speed, panic, blocked):
     ZONE_RADIUS = 8
     ZONE_RADIUS_M = ZONE_RADIUS / PIXELS_PER_METER
     ZONE_AREA = np.pi * ZONE_RADIUS_M**2   
-    peak_density = np.zeros(8)
+    peak_density = np.zeros(8) #stores highest density at each exit 
 
     for tick in range(FPS_SIM * 500):
         alive = ~out
@@ -81,7 +81,7 @@ def run_sim(n, speed, panic, blocked):
                     wait_sum[i] += near
                     wait_cnt[i] += 1
 
-                # density within the zone radius secified
+                # density within the zone radius specified
                 zone_count   = np.sum(dists_to_exit < ZONE_RADIUS)
                 density_here = zone_count / ZONE_AREA
                 if density_here > peak_density[i]:
@@ -98,13 +98,13 @@ def run_sim(n, speed, panic, blocked):
             density[si] = np.sum(np.hypot(ddx, ddy) < 20)
 
         slowdown = 1 - np.clip(density / 80, 0, 0.4) * panic
-        eff_spd  = spds[m_idx] * (0.5 + 0.5 * dist[move] / (dist[move] + 25)) * slowdown
+        eff_spd  = spds[m_idx] * (0.5 + 0.5 * dist[move] / (dist[move] + 25)) * slowdown # it makes people slower when they get close to the exit 
 
         x[m_idx] += (dx[move] / dist[move]) * eff_spd
         y[m_idx] += (dy[move] / dist[move]) * eff_spd
 
-    safe_cnt = np.where(wait_cnt > 0, wait_cnt, 1)
-    avg_w    = np.where(wait_cnt > 0, wait_sum / safe_cnt / FPS_SIM * 10, 0)
+    safe_cnt = np.where(wait_cnt > 0, wait_cnt, 1) #to avoid dividing by zero
+    avg_w    = np.where(wait_cnt > 0, wait_sum / safe_cnt / FPS_SIM * 10, 0) #average wait time
 
     return pd.DataFrame(rows, columns=["second", "evacuated"]), max_q, avg_w, peak_density
 
@@ -122,6 +122,7 @@ max_queue    = {}
 avg_wait     = {}
 peak_density = {}
 
+#storing results for each scenario
 for key, sc in SCENARIOS.items():
     print(f"  {sc['label']}...")
     df, mq, aw, pd_vals = run_sim(5000, sc["speed"], sc["panic"], sc["blocked"])
@@ -186,11 +187,11 @@ for key, df in data.items():
 
         # R² on full data
         predicted  = logistic(time, *best)
-        ss_res     = np.sum((actual - predicted) ** 2)
-        ss_tot     = np.sum((actual - actual.mean()) ** 2)
+        ss_res     = np.sum((actual - predicted) ** 2)#sum of squares residuals
+        ss_tot     = np.sum((actual - actual.mean()) ** 2)#sum of differenced from the mean
         r_squared  = round(1 - ss_res / ss_tot, 4)
 
-        # RMSE on held-out 20%
+        # RMSE on the 20% validation data
         test_pred  = logistic(test_time, *best)
         rmse       = round(np.sqrt(np.mean((test_actual - test_pred) ** 2)), 1)
 
@@ -201,8 +202,8 @@ for key, df in data.items():
         fit_stats[key] = {"r2": None, "rmse": None}
 
 
-#  SENSITIVITY ANALYSIS (fast: 3 extra sims)
-# vary panic factor for the panic scenario — low, base, high
+#  SENSITIVITY ANALYSIS
+# vary panic factor for the panic scenario :  low, base, high
 
 
 print("Running sensitivity analysis...")

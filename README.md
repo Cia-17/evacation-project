@@ -73,9 +73,10 @@ Runs all three scenarios silently (no window), then writes the following to the 
 | `plot3_bottleneck.html` | Max queue depth and average wait time per exit |
 | `plot4_density.html` | Peak crowd density (people/m²) per stadium gate |
 | `plot5_flowrate.html` | Rolling evacuation flow rate (people per second) |
-| `plot6_recommendations.html` | Safety recommendations bubble chart |
 | `timeline_*.csv` | Raw per-second evacuation counts for each scenario |
 | `milestones.csv` | Milestone timestamps table |
+
+All the csv files were initially generated with the intention of using them as hard-coded values for pygame but was not implemented.
 
 Open `results/report2.html` in any browser to view the complete report.
 

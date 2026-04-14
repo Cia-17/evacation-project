@@ -10,9 +10,9 @@ FPS    = 60
 TOTAL  = 5000
 
 SCENARIOS = {
-    "normal":  {"blocked": [],    "speed": 1.0, "panic": 1.0},
-    "partial": {"blocked": [1,5], "speed": 0.80,"panic": 1.3},
-    "panic":   {"blocked": [1,5], "speed": 0.60,"panic": 2.0},
+    "normal":  {"blocked": [1,5],    "speed": 1.0, "panic": 1.0},
+    "partial": {"blocked": [1], "speed": 0.80,"panic": 1.3},
+    "panic":   {"blocked": [], "speed": 0.50,"panic": 4.0},
 }
 
 # --- COLOURS ---
